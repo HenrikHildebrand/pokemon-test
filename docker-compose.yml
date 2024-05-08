@@ -1,0 +1,48 @@
+version: '3.7'
+
+services:
+  backend:
+    container_name: pokemon_backend
+    build:
+      dockerfile: Dockerfile.backend
+      context: .
+      target: development
+    environment:
+      - DATABASE_URL=mongodb://mongo:27017/pokemon-test?authSource=admin&retryWrites=true&w=majority
+    command: npm run start:dev
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongo
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000/api-json || exit
+      start_period: 10s
+      interval: 2s
+      timeout: 2s
+      retries: 60
+    entrypoint: ['sh', 'entrypoint.sh']
+    volumes:
+      - './src:/pokemon-app/src'
+      - './prisma:/pokemon-app/prisma'
+      - './package.json:/pokemon-app/package.json'
+      - /pokemon-app/node_modules
+  mongo:
+    image: mongo:7.0
+    command: ['--replSet', 'rs0', '--bind_ip_all', '--port', '27017']
+    ports:
+      - 27017:27017
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'host.docker.internal:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      retries: 30
+    volumes:
+      - 'mongo_data:/data/db'
+      - 'mongo_config:/data/configdb'
+
+volumes:
+  mongo_data:
+  mongo_config:

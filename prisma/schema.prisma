@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Pokemon {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  num           String      @unique
+  name          String
+  img           String
+  type          String[]
+  height        String
+  weight        String
+  candy         String
+  candyCount    Int?        @map("candy_count")
+  egg           String
+  spawnChance   Float       @map("spawn_chance")
+  avgSpawns     Float       @map("avg_spawns")
+  spawnTime     String      @map("spawn_time")
+  multipliers   Float[]
+  weaknesses    String[]
+  nextEvolution Evolution[] @map("next_evolution")
+  prevEvolution Evolution[] @map("prev_evolution")
+}
+
+type Evolution {
+  num  String
+  name String
+}
